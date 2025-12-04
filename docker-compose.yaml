@@ -1,5 +1,4 @@
-version: '3'
-
+# 移除过时的 version: '3' 字段（核心！日志提示该属性已废弃）
 services:
   base: &base
     build:
@@ -14,6 +13,9 @@ services:
     stdin_open: true
     image: chatwoot:development
     env_file: .env
+    environment:
+      - TZ=Asia/Shanghai  # 新增：基础镜像时区（所有继承的服务都会生效）
+      - RAILS_TIMEZONE=Asia/Shanghai  # Rails 应用时区
 
   rails:
     <<: *base
@@ -28,11 +30,16 @@ services:
       - cache:/app/tmp/cache
       - bundle:/usr/local/bundle
     depends_on:
-      - postgres
-      - redis
-      - vite
-      - mailhog
-      - sidekiq
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      vite:
+        condition: service_started
+      mailhog:
+        condition: service_started
+      sidekiq:
+        condition: service_started
     ports:
       - 3000:3000
     env_file: .env
@@ -40,8 +47,10 @@ services:
       - VITE_DEV_SERVER_HOST=vite
       - NODE_ENV=development
       - RAILS_ENV=development
+      - TZ=Asia/Shanghai  # 显式指定，确保覆盖
+      - RAILS_TIMEZONE=Asia/Shanghai
     entrypoint: docker/entrypoints/rails.sh
-    command: ["bundle", "exec", "rails", "s", "-p", "3000", "-b", "0.0.0.0"]
+    command: [ "bundle", "exec", "rails", "s", "-p", "3000", "-b", "0.0.0.0" ]
 
   sidekiq:
     <<: *base
@@ -53,12 +62,16 @@ services:
       - cache:/app/tmp/cache
       - bundle:/usr/local/bundle
     depends_on:
-      - postgres
-      - redis
-      - mailhog
+      postgres:
+        condition: service_healthy  # 新增：等待 Postgres 就绪
+      redis:
+        condition: service_started
+      mailhog:
+        condition: service_started
     environment:
       - NODE_ENV=development
       - RAILS_ENV=development
+      - TZ=Asia/Shanghai  # 新增：Sidekiq 时区
     command: ["bundle", "exec", "sidekiq", "-C", "config/sidekiq.yml"]
 
   vite:
@@ -80,6 +93,7 @@ services:
       - NODE_ENV=development
       - RAILS_ENV=development
       - VITE_API_URL=http://rails:3000
+      - TZ=Asia/Shanghai  # 新增：Vite 时区
     entrypoint: docker/entrypoints/vite.sh
     command: bin/vite dev
 
@@ -94,6 +108,14 @@ services:
       - POSTGRES_DB=chatwoot
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=chatwootDh888888
+      - TZ=Asia/Shanghai  # 新增：Postgres 数据库时区（核心！避免时间解析异常）
+    # 新增：Postgres 健康检查（确保数据库就绪后再启动 Rails/Sidekiq）
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d chatwoot"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   redis:
     image: redis:alpine
@@ -104,12 +126,16 @@ services:
       - redis:/data/redis
     ports:
       - '6379:6379'
+    environment:
+      - TZ=Asia/Shanghai  # 新增：Redis 时区
 
   mailhog:
     image: mailhog/mailhog
     ports:
       - 1025:1025
       - 8025:8025
+    environment:
+      - TZ=Asia/Shanghai  # 新增：Mailhog 时区
 
 volumes:
   postgres:

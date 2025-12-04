@@ -57,7 +57,8 @@ module Chatwoot
     # the framework and any gems in your application.
     config.generators.javascripts = false
     config.generators.stylesheets = false
-
+    config.time_zone = 'Asia/Shanghai'
+    config.active_record.default_timezone = :utc
     # Custom chatwoot configurations
     config.x = config_for(:app).with_indifferent_access
 

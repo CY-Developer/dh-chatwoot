@@ -12,6 +12,7 @@ import wootConstants from 'dashboard/constants/globals';
 import { conversationListPageURL } from 'dashboard/helper/URLHelper';
 import { snoozedReopenTime } from 'dashboard/helper/snoozeHelpers';
 import { useInbox } from 'dashboard/composables/useInbox';
+import SyncMessagesModal from './SyncMessagesModal.vue';
 import { useI18n } from 'vue-i18n';
 
 const props = defineProps({
@@ -31,6 +32,25 @@ const route = useRoute();
 const conversationHeader = ref(null);
 const { width } = useElementSize(conversationHeader);
 const { isAWebWidgetInbox } = useInbox();
+
+// 同步消息弹窗状态
+const showSyncModal = ref(false);
+
+// 判断是否是 API 渠道（WhatsApp 桥接）
+const isApiChannel = computed(() => {
+  const inboxData = inbox.value;
+  return inboxData?.channel_type === 'Channel::Api' ||
+    inboxData?.channel_type === 'Channel::Whatsapp';
+});
+
+// 同步完成后刷新消息
+const onSyncComplete = () => {
+  store.dispatch('fetchPreviousMessages', {
+    conversationId: currentChat.value.id,
+    before: null,
+  });
+};
+
 
 const currentChat = computed(() => store.getters.getSelectedChat);
 const accountId = computed(() => store.getters.getCurrentAccountId);
@@ -151,7 +171,27 @@ const hasSlaPolicyId = computed(() => props.chat?.sla_policy_id);
         :parent-width="width"
         class="hidden md:flex"
       />
+      <!-- 同步 WhatsApp 消息按钮 -->
+      <woot-button
+        v-if="isApiChannel"
+        v-tooltip.bottom-end="'同步 WhatsApp 消息'"
+        variant="hollow"
+        size="small"
+        color-scheme="secondary"
+        icon="arrow-sync"
+        @click="showSyncModal = true"
+      />
+
       <MoreActions :conversation-id="currentChat.id" />
+
+      <!-- 同步消息弹窗 -->
+      <SyncMessagesModal
+        v-if="showSyncModal"
+        :show="showSyncModal"
+        :conversation-id="currentChat.id"
+        @close="showSyncModal = false"
+        @sync-complete="onSyncComplete"
+      />
     </div>
   </div>
 </template>

@@ -425,5 +425,30 @@
   },
   "GALLERY_VIEW": {
     "ERROR_DOWNLOADING": "Unable to download attachment. Please try again"
+  },
+  "SYNC_MESSAGES": {
+    "TITLE": "Sync WhatsApp Messages",
+    "DESC": "Sync historical messages from WhatsApp to Chatwoot",
+    "QUICK_OPTIONS": "Quick Options",
+    "LAST_12_HOURS": "Last 12 hours",
+    "LAST_24_HOURS": "Last 24 hours",
+    "LAST_7_DAYS": "Last 7 days",
+    "LAST_3_MONTHS": "Last 3 months",
+    "CUSTOM_RANGE": "Custom Time Range",
+    "START_TIME": "Start Time",
+    "END_TIME": "End Time",
+    "SYNC_CUSTOM": "Sync Custom Range",
+    "OPTIONS": "Sync Options",
+    "REPLACE_MODE": "Replace mode (delete existing messages before sync)",
+    "REPLACE_MODE_HELP": "If checked, existing messages in this time range will be deleted before syncing",
+    "DIRECTION": "Direction",
+    "DIRECTION_BOTH": "Both (sent and received)",
+    "DIRECTION_INCOMING": "Incoming only",
+    "DIRECTION_OUTGOING": "Outgoing only",
+    "SYNCING": "Syncing messages...",
+    "SUCCESS": "Sync complete! {synced} synced, {failed} failed",
+    "ERROR": "Sync failed: {error}",
+    "CANCEL": "Close",
+    "BUTTON_TOOLTIP": "Sync WhatsApp Messages"
   }
 }

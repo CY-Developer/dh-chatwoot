@@ -55,6 +55,7 @@
       "FILE": "{sender} 分享了一个文件",
       "MEETING": "{sender} 已开始会议"
     },
+
     "UPLOADING_ATTACHMENTS": "正在上传附件...",
     "REPLIED_TO_STORY": "回复您的故事",
     "UNSUPPORTED_MESSAGE": "不支持此消息。您可以在 Facebook Messenger 应用上查看此消息。",
@@ -425,5 +426,30 @@
   },
   "GALLERY_VIEW": {
     "ERROR_DOWNLOADING": "无法上传附件。请重试"
+  },
+  "SYNC_MESSAGES": {
+    "TITLE": "同步 WhatsApp 消息",
+    "DESC": "从 WhatsApp 同步历史消息到 Chatwoot",
+    "QUICK_OPTIONS": "快捷选项",
+    "LAST_12_HOURS": "最近 12 小时",
+    "LAST_24_HOURS": "最近 24 小时",
+    "LAST_7_DAYS": "最近 7 天",
+    "LAST_3_MONTHS": "最近 3 个月",
+    "CUSTOM_RANGE": "自定义时间范围",
+    "START_TIME": "开始时间",
+    "END_TIME": "结束时间",
+    "SYNC_CUSTOM": "同步指定范围",
+    "OPTIONS": "同步选项",
+    "REPLACE_MODE": "替换模式（删除现有消息后重新同步）",
+    "REPLACE_MODE_HELP": "勾选后会先删除该时间段内的现有消息，然后重新同步",
+    "DIRECTION": "同步方向",
+    "DIRECTION_BOTH": "双向（收发消息）",
+    "DIRECTION_INCOMING": "仅接收的消息",
+    "DIRECTION_OUTGOING": "仅发送的消息",
+    "SYNCING": "正在同步消息...",
+    "SUCCESS": "同步完成！成功 {synced} 条，失败 {failed} 条",
+    "ERROR": "同步失败：{error}",
+    "CANCEL": "关闭",
+    "BUTTON_TOOLTIP": "同步 WhatsApp 消息"
   }
 }
