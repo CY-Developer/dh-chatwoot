@@ -3,6 +3,7 @@ import format from 'date-fns/format';
 import isToday from 'date-fns/isToday';
 import isYesterday from 'date-fns/isYesterday';
 import { endOfDay, getUnixTime, startOfDay } from 'date-fns';
+const SHANGHAI_TIMEZONE = 'Asia/Shanghai';
 
 export const formatUnixDate = (date, dateFormat = 'MMM dd, yyyy') => {
   const unixDate = fromUnixTime(date);
@@ -15,7 +16,17 @@ export const formatDate = ({ date, todayText, yesterdayText }) => {
   if (isYesterday(dateValue)) return yesterdayText;
   return date;
 };
-
+export const formatDateToShanghai = (date) => {
+  if (!date) return '';
+  return new Date(date).toLocaleString('zh-CN', {
+    timeZone: SHANGHAI_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
 export const isTimeAfter = (h1, m1, h2, m2) => {
   if (h1 < h2) {
     return false;
