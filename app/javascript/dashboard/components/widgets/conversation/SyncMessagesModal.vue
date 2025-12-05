@@ -141,6 +141,7 @@ export default {
     },
   },
   methods: {
+
     onClose() {
       this.$emit('close');
       this.syncStatus = null;
@@ -171,6 +172,7 @@ export default {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'x-api-token': 'your-generated-token',
           },
           body: JSON.stringify({
             conversation_id: this.conversationId,

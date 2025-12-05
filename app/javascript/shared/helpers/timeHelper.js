@@ -4,99 +4,111 @@ import {
   fromUnixTime,
   formatDistanceToNow,
   differenceInDays,
+  differenceInHours,
+  isToday,
+  isYesterday,
 } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
 
 // 上海时区常量
 const SHANGHAI_TIMEZONE = 'Asia/Shanghai';
 
+// 星期映射
+const WEEKDAY_NAMES = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+
 /**
- * 将时间转换为上海时区的格式化字符串
+ * 将时间转换为上海时区
  * @param {Date} date - 日期对象
- * @param {Object} options - Intl.DateTimeFormat 选项
- * @returns {string} 格式化的时间字符串
+ * @returns {Date} 上海时区的日期对象
  */
-const formatToShanghai = (date, options = {}) => {
-  return date.toLocaleString('en-US', {
-    timeZone: SHANGHAI_TIMEZONE,
-    ...options,
-  });
+const toShanghaiTime = (date) => {
+  return new Date(date.toLocaleString('en-US', { timeZone: SHANGHAI_TIMEZONE }));
 };
 
 /**
- * 获取上海时区的小时和分钟
+ * 获取上海时区的时间部分 (HH:mm)
  * @param {Date} date - 日期对象
- * @returns {string} 格式如 "3:45 PM"
+ * @returns {string} 时间字符串 如 "15:30"
  */
-const getShanghaiTime = (date) => {
-  return date.toLocaleString('en-US', {
+const getShanghaiTimeStr = (date) => {
+  return date.toLocaleString('zh-CN', {
     timeZone: SHANGHAI_TIMEZONE,
-    hour: 'numeric',
+    hour: '2-digit',
     minute: '2-digit',
-    hour12: true,
+    hour12: false,
   });
 };
 
 /**
- * 获取上海时区的日期
- * @param {Date} date - 日期对象
- * @param {boolean} includeYear - 是否包含年份
- * @returns {string} 格式如 "Dec 4, 2025"
- */
-const getShanghaiDate = (date, includeYear = false) => {
-  const options = {
-    timeZone: SHANGHAI_TIMEZONE,
-    month: 'short',
-    day: 'numeric',
-  };
-  if (includeYear) {
-    options.year = 'numeric';
-  }
-  return date.toLocaleString('en-US', options);
-};
-
-/**
- * Formats a Unix timestamp into a human-readable time format (上海时区).
- * @param {number} time - Unix timestamp.
- * @param {string} [dateFormat='h:mm a'] - Desired format of the time.
- * @returns {string} Formatted time string in Shanghai timezone.
+ * 【会话列表用】格式化时间戳
+ * 一周内显示"星期x HH:mm"，一周前显示"yyyy/MM/dd"
+ * @param {number} time - Unix timestamp
+ * @returns {string} 格式化的时间字符串
  */
 export const messageStamp = (time, dateFormat = 'h:mm a') => {
   const unixTime = fromUnixTime(time);
+  const shanghaiTime = toShanghaiTime(unixTime);
+  const now = toShanghaiTime(new Date());
+  const daysDiff = differenceInDays(now, shanghaiTime);
+  const hoursDiff = differenceInHours(now, shanghaiTime);
 
-  // 强制使用上海时区
-  // dateFormat 参数在这里被忽略，统一使用上海时区格式
-  return getShanghaiTime(unixTime);
+  // 1小时内显示"x分钟前"
+  if (hoursDiff < 1) {
+    const minutes = Math.floor((now - shanghaiTime) / 60000);
+    if (minutes < 1) return '刚刚';
+    return `${minutes}分钟前`;
+  }
+
+  // 今天显示时间
+  if (isToday(shanghaiTime)) {
+    return getShanghaiTimeStr(shanghaiTime);
+  }
+
+  // 昨天显示"昨天 HH:mm"
+  if (isYesterday(shanghaiTime)) {
+    return `昨天 ${getShanghaiTimeStr(shanghaiTime)}`;
+  }
+
+  // 一周内显示"星期x HH:mm"
+  if (daysDiff < 7) {
+    const weekday = WEEKDAY_NAMES[shanghaiTime.getDay()];
+    return `${weekday} ${getShanghaiTimeStr(shanghaiTime)}`;
+  }
+
+  // 一周前显示 "yyyy/MM/dd"
+  return shanghaiTime.toLocaleString('zh-CN', {
+    timeZone: SHANGHAI_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).replace(/\//g, '/');
 };
 
 /**
- * Provides a formatted timestamp, adjusting the format based on the current year (上海时区).
- * @param {number} time - Unix timestamp.
- * @param {string} [dateFormat='MMM d, yyyy'] - Desired date format.
- * @returns {string} Formatted date string in Shanghai timezone.
+ * 【消息气泡用】格式化时间戳
+ * 显示"x月x日 HH:mm"格式
+ * @param {number} time - Unix timestamp
+ * @param {string} [dateFormat] - 未使用，保持兼容
+ * @returns {string} 格式化的时间字符串，如"12月4日 15:30"
  */
 export const messageTimestamp = (time, dateFormat = 'MMM d, yyyy') => {
   const unixTime = fromUnixTime(time);
-  const now = new Date();
+  const shanghaiTime = toShanghaiTime(unixTime);
+  const now = toShanghaiTime(new Date());
 
-  // 获取上海时区的年份进行比较
-  const messageYear = parseInt(formatToShanghai(unixTime, { year: 'numeric' }), 10);
-  const currentYear = parseInt(formatToShanghai(now, { year: 'numeric' }), 10);
+  // 获取月日时分
+  const month = shanghaiTime.getMonth() + 1;
+  const day = shanghaiTime.getDate();
+  const timeStr = getShanghaiTimeStr(shanghaiTime);
 
-  if (messageYear !== currentYear) {
-    // 不同年份，显示完整日期和时间
-    return unixTime.toLocaleString('en-US', {
-      timeZone: SHANGHAI_TIMEZONE,
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
+  // 不同年份显示年份
+  if (shanghaiTime.getFullYear() !== now.getFullYear()) {
+    const year = shanghaiTime.getFullYear();
+    return `${year}年${month}月${day}日 ${timeStr}`;
   }
 
-  // 同一年，只显示月日
-  return getShanghaiDate(unixTime, false);
+  // 同一年显示"x月x日 HH:mm"
+  return `${month}月${day}日 ${timeStr}`;
 };
 
 /**
@@ -106,18 +118,22 @@ export const messageTimestamp = (time, dateFormat = 'MMM d, yyyy') => {
  */
 export const dynamicTime = time => {
   const unixTime = fromUnixTime(time);
-  return formatDistanceToNow(unixTime, { addSuffix: true });
+  return formatDistanceToNow(unixTime, { addSuffix: true, locale: zhCN });
 };
 
 /**
  * Formats a Unix timestamp into a specified date format (上海时区).
  * @param {number} time - Unix timestamp.
- * @param {string} [dateFormat='MMM d, yyyy'] - Desired date format.
- * @returns {string} Formatted date string in Shanghai timezone.
+ * @param {string} [df] - 未使用
+ * @returns {string} 格式化的日期字符串
  */
 export const dateFormat = (time, df = 'MMM d, yyyy') => {
   const unixTime = fromUnixTime(time);
-  return getShanghaiDate(unixTime, true);
+  const shanghaiTime = toShanghaiTime(unixTime);
+  const month = shanghaiTime.getMonth() + 1;
+  const day = shanghaiTime.getDate();
+  const year = shanghaiTime.getFullYear();
+  return `${year}年${month}月${day}日`;
 };
 
 /**
@@ -127,30 +143,30 @@ export const dateFormat = (time, df = 'MMM d, yyyy') => {
  * @returns {string} Shortened time description.
  */
 export const shortTimestamp = (time, withAgo = false) => {
-  const suffix = withAgo ? ' ago' : '';
+  const suffix = withAgo ? '前' : '';
   const timeMappings = {
-    'less than a minute ago': 'now',
-    'a minute ago': `1m${suffix}`,
-    'an hour ago': `1h${suffix}`,
-    'a day ago': `1d${suffix}`,
-    'a month ago': `1mo${suffix}`,
-    'a year ago': `1y${suffix}`,
+    'less than a minute ago': '刚刚',
+    'a minute ago': `1分钟${suffix}`,
+    'an hour ago': `1小时${suffix}`,
+    'a day ago': `1天${suffix}`,
+    'a month ago': `1月${suffix}`,
+    'a year ago': `1年${suffix}`,
   };
   if (timeMappings[time]) {
     return timeMappings[time];
   }
   const convertToShortTime = time
     .replace(/about|over|almost|/g, '')
-    .replace(' minute ago', `m${suffix}`)
-    .replace(' minutes ago', `m${suffix}`)
-    .replace(' hour ago', `h${suffix}`)
-    .replace(' hours ago', `h${suffix}`)
-    .replace(' day ago', `d${suffix}`)
-    .replace(' days ago', `d${suffix}`)
-    .replace(' month ago', `mo${suffix}`)
-    .replace(' months ago', `mo${suffix}`)
-    .replace(' year ago', `y${suffix}`)
-    .replace(' years ago', `y${suffix}`);
+    .replace(' minute ago', `分钟${suffix}`)
+    .replace(' minutes ago', `分钟${suffix}`)
+    .replace(' hour ago', `小时${suffix}`)
+    .replace(' hours ago', `小时${suffix}`)
+    .replace(' day ago', `天${suffix}`)
+    .replace(' days ago', `天${suffix}`)
+    .replace(' month ago', `月${suffix}`)
+    .replace(' months ago', `月${suffix}`)
+    .replace(' year ago', `年${suffix}`)
+    .replace(' years ago', `年${suffix}`);
   return convertToShortTime;
 };
 
@@ -184,7 +200,6 @@ export const formatDateToShanghai = (date) => {
   if (!date) return '';
   let dateObj;
   if (typeof date === 'number') {
-    // 如果是秒级时间戳（小于 10000000000）
     dateObj = date < 10000000000 ? fromUnixTime(date) : new Date(date);
   } else {
     dateObj = new Date(date);

@@ -7,6 +7,7 @@ import {
   dynamicTime,
   dateFormat,
   shortTimestamp,
+  messageStamp,
 } from 'shared/helpers/timeHelper';
 
 export default {
@@ -34,10 +35,10 @@ export default {
   },
   computed: {
     lastActivityTime() {
-      return shortTimestamp(this.lastActivityAtTimeAgo);
+      return messageStamp(this.lastActivityTimestamp);
     },
     createdAtTime() {
-      return shortTimestamp(this.createdAtTimeAgo);
+      return messageStamp(this.createdAtTimestamp);
     },
     createdAt() {
       const createdTimeDiff = Date.now() - this.createdAtTimestamp * 1000;
